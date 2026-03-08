@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0a0030">
+  <title>AI as a Professional Co-Pilot — Orik Drancolli</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%; height: 100%; overflow: hidden;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0a0030;
+      -webkit-font-smoothing: antialiased;
+      -webkit-text-size-adjust: 100%;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ---- Presentation Container ---- */
+    .presentation { width: 100%; height: 100%; position: relative; }
+
+    /* ---- Slide Base ---- */
+    .slide {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      opacity: 0; visibility: hidden;
+      transition: opacity 0.45s ease;
+      overflow-y: auto; overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+    .slide.active { opacity: 1; visibility: visible; z-index: 10; }
+
+    /* Hide scrollbar but keep scrollable */
+    .slide::-webkit-scrollbar { display: none; }
+    .slide { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* ---- Slide Background ---- */
+    .slide-bg {
+      position: fixed; inset: 0;
+      background: linear-gradient(135deg, #230078 0%, #1A0055 50%, #0f0035 100%);
+      z-index: -1;
+    }
+
+    /* ---- Slide Content ---- */
+    .slide-content {
+      position: relative; z-index: 1;
+      padding: 60px 40px 80px;
+      flex: 1; display: flex; flex-direction: column;
+      min-height: 100vh; min-height: 100dvh;
+    }
+
+    /* ---- Section Label ---- */
+    .section-label {
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 3px; color: #00D4AA;
+      text-transform: uppercase; margin-bottom: 8px;
+      text-shadow: 0 0 20px rgba(0,212,170,0.3);
+    }
+
+    /* ---- Slide Title ---- */
+    .slide-title {
+      font-size: clamp(24px, 5vw, 36px);
+      font-weight: 700; color: #fff;
+      margin-bottom: 12px; line-height: 1.2;
+    }
+    .title-sub {
+      font-size: clamp(16px, 3.5vw, 22px);
+      font-weight: 400; color: #A07AFF;
+    }
+
+    /* ---- Slide Intro ---- */
+    .slide-intro {
+      font-size: clamp(14px, 3vw, 16px);
+      color: #B8B8C8; margin-bottom: 24px; line-height: 1.5;
+    }
+
+    /* ============ SLIDE 1: Cover ============ */
+    .cover-content {
+      position: relative; z-index: 1;
+      padding: 60px 32px 40px;
+      flex: 1; display: flex; flex-direction: column;
+      justify-content: center;
+      min-height: 100vh; min-height: 100dvh;
+    }
+    .accent-line {
+      width: 80px; height: 4px; background: #00D4AA;
+      margin-bottom: 20px; border-radius: 2px;
+      box-shadow: 0 0 12px rgba(0,212,170,0.3);
+    }
+    .cover-title {
+      font-size: clamp(32px, 8vw, 52px);
+      font-weight: 700; color: #fff; line-height: 1.15;
+      margin-bottom: 4px;
+    }
+    .cover-subtitle {
+      font-size: clamp(28px, 7vw, 48px);
+      font-weight: 700; color: #00D4AA;
+      line-height: 1.15; margin-bottom: 8px;
+    }
+    .cover-tagline {
+      font-size: clamp(15px, 3.5vw, 20px);
+      color: #A07AFF; font-weight: 400; margin-bottom: 28px;
+    }
+
+    .cover-cards { display: flex; gap: 12px; margin-bottom: 28px; flex-wrap: wrap; }
+    .cover-card {
+      background: rgba(61,26,155,0.6);
+      border: 1px solid rgba(124,77,255,0.2);
+      border-radius: 12px; padding: 14px 16px;
+      display: flex; align-items: flex-start; gap: 10px;
+      flex: 1; min-width: 140px;
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    }
+    .card-number {
+      width: 32px; height: 32px; min-width: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #00D4AA, #1A1A2E);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: #fff;
+    }
+    .card-title { font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 2px; }
+    .card-desc { font-size: 11px; color: #9E9EAE; line-height: 1.4; }
+
+    .cover-author { margin-top: auto; padding-top: 20px; }
+    .author-name { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 3px; }
+    .author-role { font-size: 12px; color: #9E9EAE; }
+
+    /* ============ Workflow / Step Grid ============ */
+    .workflow-grid {
+      display: grid; gap: 12px; margin-bottom: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    }
+    .workflow-card, .step-card {
+      background: rgba(61,26,155,0.5);
+      border: 1px solid rgba(124,77,255,0.2);
+      border-radius: 12px; padding: 18px 14px; text-align: center;
+    }
+    .wf-icon, .impact-icon {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: linear-gradient(135deg, #00D4AA, #1A1A2E);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 10px; font-size: 13px; font-weight: 700;
+      color: #fff; letter-spacing: 1px;
+    }
+    .wf-title { font-size: 13px; font-weight: 600; color: #fff; margin-bottom: 4px; }
+    .wf-desc { font-size: 11px; color: #9E9EAE; line-height: 1.5; }
+
+    .step-number {
+      font-size: 26px; font-weight: 800; color: #00D4AA; margin-bottom: 4px;
+    }
+    .step-title { font-size: 13px; font-weight: 600; color: #fff; margin-bottom: 4px; }
+    .step-desc { font-size: 11px; color: #9E9EAE; line-height: 1.5; }
+
+    /* ---- Key Insight ---- */
+    .key-insight {
+      background: rgba(61,26,155,0.4);
+      border: 1px solid rgba(0,212,170,0.3);
+      border-left: 3px solid #00D4AA;
+      border-radius: 8px; padding: 14px 20px;
+      margin-top: auto;
+    }
+    .insight-label {
+      font-size: 10px; font-weight: 700; color: #00D4AA;
+      letter-spacing: 2px; margin-right: 12px;
+    }
+    .insight-text { font-size: 14px; color: #fff; font-weight: 500; }
+
+    /* ============ Slide 4: Collab ============ */
+    .collab-container {
+      display: flex; flex-direction: column;
+      gap: 16px; margin-bottom: 20px; flex: 1;
+    }
+    .collab-box {
+      background: rgba(61,26,155,0.5);
+      border: 1px solid rgba(124,77,255,0.2);
+      border-radius: 12px; padding: 20px 24px;
+    }
+    .collab-heading {
+      font-size: 12px; font-weight: 700; letter-spacing: 2px;
+      color: #00D4AA; margin-bottom: 12px;
+    }
+    .collab-list { list-style: none; }
+    .collab-list li {
+      font-size: 14px; color: #E8E0F5;
+      padding: 5px 0 5px 16px; position: relative; line-height: 1.5;
+    }
+    .collab-list li::before {
+      content: ''; position: absolute; left: 0; top: 50%;
+      transform: translateY(-50%);
+      width: 6px; height: 6px; border-radius: 50%; background: #A07AFF;
+    }
+    .collab-plus {
+      display: flex; align-items: center; justify-content: center;
+      font-size: 36px; font-weight: 300; color: #00D4AA; padding: 4px 0;
+    }
+    .collab-result {
+      background: linear-gradient(135deg, rgba(0,212,170,0.15), rgba(61,26,155,0.4));
+      border: 1px solid rgba(0,212,170,0.3);
+      border-radius: 10px; padding: 14px 20px;
+      text-align: center; font-size: 14px; color: #fff; font-weight: 500;
+    }
+
+    /* ============ Slide 5: Impact ============ */
+    .impact-grid {
+      display: grid; gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      flex: 1;
+    }
+    .impact-card {
+      background: rgba(61,26,155,0.5);
+      border: 1px solid rgba(124,77,255,0.2);
+      border-radius: 12px; padding: 18px 16px;
+    }
+    .impact-title {
+      font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 10px;
+    }
+    .impact-list { list-style: none; }
+    .impact-list li {
+      font-size: 12px; color: #B8B8C8;
+      padding: 3px 0 3px 14px; position: relative; line-height: 1.5;
+    }
+    .impact-list li::before {
+      content: ''; position: absolute; left: 0; top: 50%;
+      transform: translateY(-50%);
+      width: 5px; height: 5px; border-radius: 50%; background: #00D4AA;
+    }
+
+    /* ============ Slide 6: Results ============ */
+    .results-grid {
+      display: flex; flex-direction: column; gap: 10px;
+      flex: 1; justify-content: center;
+    }
+    .result-item {
+      display: flex; align-items: flex-start; gap: 16px;
+      background: rgba(61,26,155,0.4);
+      border: 1px solid rgba(124,77,255,0.15);
+      border-radius: 10px; padding: 14px 20px;
+    }
+    .result-item.highlight-result {
+      background: rgba(0,212,170,0.1);
+      border-color: rgba(0,212,170,0.4);
+      box-shadow: 0 0 20px rgba(0,212,170,0.08);
+    }
+    .result-num {
+      font-size: 24px; font-weight: 800; color: #00D4AA; min-width: 36px;
+    }
+    .result-title { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 2px; }
+    .result-desc { font-size: 12px; color: #9E9EAE; line-height: 1.4; }
+
+    /* ============ Slide 7: Visuals ============ */
+    .visuals-header {
+      display: flex; justify-content: space-between;
+      align-items: center; margin-bottom: 14px;
+      flex-wrap: wrap; gap: 8px;
+    }
+    .visuals-badge {
+      font-size: 12px; color: #00D4AA; font-weight: 600;
+      background: rgba(0,212,170,0.1);
+      border: 1px solid rgba(0,212,170,0.3);
+      padding: 4px 14px; border-radius: 20px; white-space: nowrap;
+    }
+    .visuals-grid {
+      display: grid; gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      flex: 1; margin-bottom: 12px;
+    }
+    .visual-item {
+      position: relative; background: rgba(26,0,85,0.5);
+      border: 1px solid rgba(124,77,255,0.2);
+      border-radius: 12px; overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+    .visual-label-box {
+      padding: 8px 16px; font-size: 16px; font-weight: 700;
+      color: #002060; background: #E8E0F5; text-align: center;
+    }
+    .visual-label-box span { font-size: 12px; font-weight: 400; }
+    .visual-img {
+      width: 100%; aspect-ratio: 16/10; object-fit: cover; display: block;
+    }
+    .visual-quote {
+      font-size: 12px; color: #9E9EAE; text-align: center; font-style: italic;
+    }
+
+    /* ============ Slide 8, 10: Pipeline ============ */
+    .pipeline-flow {
+      display: grid; gap: 8px;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      flex: 1; align-items: start;
+    }
+    .pipeline-step {
+      background: rgba(61,26,155,0.5);
+      border: 1px solid rgba(124,77,255,0.2);
+      border-radius: 12px; padding: 18px 16px; text-align: center;
+    }
+    .pipe-num { font-size: 26px; font-weight: 800; color: #00D4AA; margin-bottom: 6px; }
+    .pipe-title {
+      font-size: 13px; font-weight: 600; color: #fff;
+      margin-bottom: 4px; line-height: 1.3;
+    }
+    .pipe-desc { font-size: 11px; color: #9E9EAE; line-height: 1.5; }
+    .pipe-arrow { display: none; } /* Hidden on mobile; grid flow is enough */
+
+    /* ============ Slide 9: Auto Layout ============ */
+    .auto-layout {
+      display: flex; flex-direction: column;
+      gap: 20px; flex: 1;
+    }
+    .auto-flow {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 6px;
+    }
+    .auto-step {
+      width: 100%;
+      background: rgba(61,26,155,0.5);
+      border: 1px solid rgba(124,77,255,0.2);
+      border-radius: 10px; padding: 14px 20px; text-align: center;
+    }
+    .auto-step-title { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 2px; }
+    .auto-step-desc { font-size: 12px; color: #9E9EAE; }
+    .auto-arrow { font-size: 20px; color: #00D4AA; }
+    .auto-insights {
+      background: rgba(61,26,155,0.5);
+      border: 1px solid rgba(0,212,170,0.25);
+      border-radius: 12px; padding: 20px 24px;
+    }
+    .insights-heading {
+      font-size: 12px; font-weight: 700; letter-spacing: 2px;
+      color: #00D4AA; margin-bottom: 14px;
+    }
+    .insights-list { list-style: none; }
+    .insights-list li {
+      font-size: 13px; color: #E8E0F5;
+      padding: 7px 0 7px 16px; position: relative; line-height: 1.4;
+      border-bottom: 1px solid rgba(124,77,255,0.1);
+    }
+    .insights-list li:last-child { border-bottom: none; }
+    .insights-list li::before {
+      content: ''; position: absolute; left: 0; top: 50%;
+      transform: translateY(-50%);
+      width: 6px; height: 6px; border-radius: 50%; background: #92D050;
+    }
+
+    /* ============ Slide 12: Final ============ */
+    .slide-final .slide-bg {
+      background: linear-gradient(135deg, #230078 0%, #1A0055 40%, #0f0035 100%);
+    }
+    .final-content {
+      position: relative; z-index: 1;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; flex: 1;
+      padding: 60px 28px;
+      min-height: 100vh; min-height: 100dvh;
+    }
+    .final-label {
+      font-size: 16px; font-weight: 600; color: #00D4AA;
+      letter-spacing: 2px; margin-bottom: 20px;
+    }
+    .final-statement {
+      font-size: clamp(22px, 5.5vw, 34px);
+      font-weight: 700; color: #fff;
+      margin-bottom: 18px; line-height: 1.3;
+    }
+    .final-emphasis {
+      font-size: clamp(17px, 4vw, 24px);
+      font-weight: 400; color: #A07AFF;
+      line-height: 1.5; margin-bottom: 24px;
+    }
+    .final-quote {
+      font-size: 12px; color: #9E9EAE;
+      font-style: italic; margin-bottom: 24px;
+    }
+    .final-author .author-name { font-size: 18px; }
+    .final-author .author-role { font-size: 13px; }
+
+    /* ============ Footer ============ */
+    .slide-footer {
+      position: relative; z-index: 2;
+      display: flex; justify-content: space-between;
+      align-items: center; padding: 10px 28px;
+      font-size: 11px; color: #9E9EAE;
+      border-top: 1px solid rgba(124,77,255,0.1);
+      margin-top: auto;
+    }
+    .slide-number-inline { font-weight: 500; }
+    .slide-number {
+      position: absolute; bottom: 16px; right: 28px;
+      font-size: 12px; color: #9E9EAE; z-index: 2;
+    }
+
+    /* ============ Navigation ============ */
+    .nav-controls {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      display: flex; justify-content: space-between;
+      padding: 0 8px env(safe-area-inset-bottom, 8px);
+      z-index: 100; pointer-events: none;
+      padding-bottom: max(8px, env(safe-area-inset-bottom));
+    }
+    .nav-btn {
+      width: 52px; height: 52px; border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(35,0,120,0.85);
+      color: #fff; font-size: 22px; cursor: pointer;
+      pointer-events: all; display: flex;
+      align-items: center; justify-content: center;
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      -webkit-touch-callout: none; touch-action: manipulation;
+      transition: all 0.2s;
+    }
+    .nav-btn:active { background: rgba(0,212,170,0.4); transform: scale(0.92); }
+    .nav-btn:disabled { opacity: 0.2; pointer-events: none; }
+
+    /* ---- Progress Bar ---- */
+    .progress-bar {
+      position: fixed; top: 0; left: 0; width: 100%;
+      height: 3px; background: rgba(255,255,255,0.05); z-index: 100;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00D4AA, #7C4DFF);
+      transition: width 0.4s ease; width: 8.33%;
+      box-shadow: 0 0 8px rgba(0,212,170,0.4);
+    }
+
+    /* ---- Slide Counter (top right) ---- */
+    .slide-counter {
+      position: fixed; top: 12px; right: 16px;
+      font-size: 12px; color: rgba(255,255,255,0.5);
+      z-index: 100; font-weight: 500;
+      background: rgba(35,0,120,0.6);
+      padding: 4px 10px; border-radius: 12px;
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    }
+
+    /* ============ DESKTOP (min-width: 768px) ============ */
+    @media (min-width: 768px) {
+      .slide-content, .cover-content { padding: 50px 64px 60px; }
+      .cover-cards { flex-wrap: nowrap; }
+      .cover-card { min-width: 0; }
+      .collab-container { flex-direction: row; align-items: stretch; }
+      .collab-plus { padding: 0 8px; }
+      .auto-layout { flex-direction: row; }
+      .pipeline-flow {
+        display: flex; align-items: center; justify-content: center;
+        gap: 14px; flex-wrap: nowrap;
+      }
+      .pipeline-step { flex: 1; max-width: 240px; }
+      .pipe-arrow {
+        display: block; font-size: 28px; color: #00D4AA;
+        font-weight: 300; flex-shrink: 0;
+        text-shadow: 0 0 12px rgba(0,212,170,0.4);
+      }
+      .nav-controls {
+        top: 0; bottom: 0; padding: 0;
+        align-items: center;
+      }
+      .nav-btn { width: 48px; height: 48px; }
+      .nav-btn:hover {
+        background: rgba(0,212,170,0.3);
+        border-color: rgba(0,212,170,0.5);
+        box-shadow: 0 0 20px rgba(0,212,170,0.2);
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .slide-content, .cover-content { padding: 40px 80px 50px; }
+      .workflow-grid { grid-template-columns: repeat(4, 1fr); }
+      .workflow-grid.five-col { grid-template-columns: repeat(5, 1fr); }
+    }
+
+    /* ============ Animations ============ */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-in {
+      animation: fadeInUp 0.5s cubic-bezier(0.25,0.46,0.45,0.94) both;
+    }
+
+    /* Ambient glow */
+    .ambient-glow {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(ellipse at 30% 20%, rgba(0,212,170,0.04) 0%, transparent 60%),
+        radial-gradient(ellipse at 70% 80%, rgba(124,77,255,0.04) 0%, transparent 60%);
+      animation: ambientPulse 8s ease-in-out infinite alternate;
+    }
+    @keyframes ambientPulse {
+      0% { opacity: 0.6; } 100% { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="ambient-glow"></div>
+<div class="slide-counter" id="slideCounter">1 / 12</div>
+
+<div class="presentation" id="presentation">
+
+  <!-- SLIDE 1: Cover -->
+  <section class="slide active" data-slide="1">
+    <div class="slide-bg"></div>
+    <div class="cover-content">
+      <div class="accent-line"></div>
+      <h1 class="cover-title">This Entire Presentation</h1>
+      <h2 class="cover-subtitle">Was Generated by AI</h2>
+      <p class="cover-tagline">Using One Structured Prompt</p>
+      <div class="cover-cards">
+        <div class="cover-card">
+          <div class="card-number"><span>01</span></div>
+          <div class="card-text">
+            <div class="card-title">ChatGPT</div>
+            <div class="card-desc">Analysis &amp;<br>Prompt Architecture</div>
+          </div>
+        </div>
+        <div class="cover-card">
+          <div class="card-number"><span>02</span></div>
+          <div class="card-text">
+            <div class="card-title">12 Months</div>
+            <div class="card-desc">Summarized<br>Automatically</div>
+          </div>
+        </div>
+        <div class="cover-card">
+          <div class="card-number"><span>03</span></div>
+          <div class="card-text">
+            <div class="card-title">Claude</div>
+            <div class="card-desc">PowerPoint<br>Generation</div>
+          </div>
+        </div>
+      </div>
+      <div class="cover-author">
+        <div class="author-name">Orik Drancolli</div>
+        <div class="author-role">Reporting Coordinator | NLB Bank Prishtina</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: My AI Workflow -->
+  <section class="slide" data-slide="2">
+    <div class="slide-bg"></div>
+    <div class="slide-content">
+      <div class="section-label">MY AI WORKFLOW</div>
+      <h2 class="slide-title">How I Use AI</h2>
+      <p class="slide-intro">AI became part of my daily professional workflow.</p>
+      <div class="workflow-grid">
+        <div class="workflow-card">
+          <div class="wf-icon">FA</div>
+          <div class="wf-title">Financial Analysis</div>
+          <div class="wf-desc">Insight generation from complex financial data</div>
+        </div>
+        <div class="workflow-card">
+          <div class="wf-icon">IS</div>
+          <div class="wf-title">Information Structure</div>
+          <div class="wf-desc">Structuring complex financial information</div>
+        </div>
+        <div class="workflow-card">
+          <div class="wf-icon">LV</div>
+          <div class="wf-title">Logic Validation</div>
+          <div class="wf-desc">Validating analytical logic and assumptions</div>
+        </div>
+        <div class="workflow-card">
+          <div class="wf-icon">EC</div>
+          <div class="wf-title">Executive Communication</div>
+          <div class="wf-desc">Preparing clear executive communication</div>
+        </div>
+      </div>
+      <div class="key-insight">
+        <span class="insight-label">KEY INSIGHT</span>
+        <span class="insight-text">AI supports thinking — not just tasks.</span>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>Orik Drancolli | NLB Bank Prishtina</span>
+      <span class="slide-number-inline">2/12</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: Daily Collaboration -->
+  <section class="slide" data-slide="3">
+    <div class="slide-bg"></div>
+    <div class="slide-content">
+      <div class="section-label">DAILY COLLABORATION</div>
+      <h2 class="slide-title">AI as My Analytical Co-Worker</h2>
+      <p class="slide-intro">Every day I collaborate with AI during analysis.</p>
+      <div class="workflow-grid five-col">
+        <div class="step-card">
+          <div class="step-number">01</div>
+          <div class="step-title">Exploring</div>
+          <div class="step-desc">Financial ideas and hypotheses</div>
+        </div>
+        <div class="step-card">
+          <div class="step-number">02</div>
+          <div class="step-title">Refining</div>
+          <div class="step-desc">Analytical approaches</div>
+        </div>
+        <div class="step-card">
+          <div class="step-number">03</div>
+          <div class="step-title">Challenging</div>
+          <div class="step-desc">Assumptions and logic</div>
+        </div>
+        <div class="step-card">
+          <div class="step-number">04</div>
+          <div class="step-title">Structuring</div>
+          <div class="step-desc">Executive insights</div>
+        </div>
+        <div class="step-card">
+          <div class="step-number">05</div>
+          <div class="step-title">Improving</div>
+          <div class="step-desc">Communication clarity</div>
+        </div>
+      </div>
+      <div class="key-insight">
+        <span class="insight-text">AI amplifies expertise — it does not replace it.</span>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>Orik Drancolli | NLB Bank Prishtina</span>
+      <span class="slide-number-inline">3/12</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: Collaboration Model -->
+  <section class="slide" data-slide="4">
+    <div class="slide-bg"></div>
+    <div class="slide-content">
+      <div class="section-label">COLLABORATION MODEL</div>
+      <h2 class="slide-title">Human + AI Banking Intelligence</h2>
+      <div class="collab-container">
+        <div class="collab-box">
+          <h3 class="collab-heading">HUMAN STRENGTH</h3>
+          <ul class="collab-list">
+            <li>Banking expertise &amp; domain knowledge</li>
+            <li>Business context understanding</li>
+            <li>Judgment and accountability</li>
+            <li>Decision responsibility</li>
+          </ul>
+        </div>
+        <div class="collab-plus">+</div>
+        <div class="collab-box">
+          <h3 class="collab-heading">AI CAPABILITY</h3>
+          <ul class="collab-list">
+            <li>Rapid analysis support</li>
+            <li>Idea exploration at scale</li>
+            <li>Pattern recognition</li>
+            <li>Structured communication</li>
+          </ul>
+        </div>
+      </div>
+      <div class="collab-result">
+        Human expertise + AI capability = Faster decision intelligence
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>Orik Drancolli | NLB Bank Prishtina</span>
+      <span class="slide-number-inline">4/12</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: 12-Month Impact -->
+  <section class="slide" data-slide="5">
+    <div class="slide-bg"></div>
+    <div class="slide-content">
+      <div class="section-label">12-MONTH IMPACT</div>
+      <h2 class="slide-title">Real Work Applications</h2>
+      <p class="slide-intro">During the last 12 months, AI supported several areas of my work.</p>
+      <div class="impact-grid">
+        <div class="impact-card">
+          <div class="impact-icon">FA</div>
+          <div class="impact-title">Financial Analysis</div>
+          <ul class="impact-list">
+            <li>Low-cost deposits</li>
+            <li>Financial statement insights</li>
+            <li>Deposit structure analysis</li>
+          </ul>
+        </div>
+        <div class="impact-card">
+          <div class="impact-icon">RP</div>
+          <div class="impact-title">Reporting</div>
+          <ul class="impact-list">
+            <li>Executive summaries for management</li>
+            <li>Translating analysis into clear insights</li>
+          </ul>
+        </div>
+        <div class="impact-card">
+          <div class="impact-icon">DA</div>
+          <div class="impact-title">Data &amp; Analytics</div>
+          <ul class="impact-list">
+            <li>Complex Excel formulas</li>
+            <li>Power BI models</li>
+            <li>KPI calculations</li>
+            <li>New Power BI report ideas</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>Orik Drancolli | NLB Bank Prishtina</span>
+      <span class="slide-number-inline">5/12</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: Measurable Results -->
+  <section class="slide" data-slide="6">
+    <div class="slide-bg"></div>
+    <div class="slide-content">
+      <div class="section-label">MEASURABLE RESULTS</div>
+      <h2 class="slide-title">Impact on My Work</h2>
+      <div class="results-grid">
+        <div class="result-item">
+          <div class="result-num">01</div>
+          <div class="result-body">
+            <div class="result-title">Faster Analysis</div>
+            <div class="result-desc">AI accelerates validation of financial logic</div>
+          </div>
+        </div>
+        <div class="result-item">
+          <div class="result-num">02</div>
+          <div class="result-body">
+            <div class="result-title">Clearer Insights</div>
+            <div class="result-desc">Complex analysis becomes structured communication</div>
+          </div>
+        </div>
+        <div class="result-item">
+          <div class="result-num">03</div>
+          <div class="result-body">
+            <div class="result-title">More Analytical Capacity</div>
+            <div class="result-desc">Routine tasks reduced, more time for strategic work</div>
+          </div>
+        </div>
+        <div class="result-item highlight-result">
+          <div class="result-num">04</div>
+          <div class="result-body">
+            <div class="result-title">5 to 8 Hours Saved / Week</div>
+            <div class="result-desc">Significant time reclaimed for higher-value analysis</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>Orik Drancolli | NLB Bank Prishtina</span>
+      <span class="slide-number-inline">6/12</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 7: AI-Generated Visuals -->
+  <section class="slide" data-slide="7">
+    <div class="slide-bg"></div>
+    <div class="slide-content">
+      <div class="section-label">AI-GENERATED VISUALS</div>
+      <div class="visuals-header">
+        <h2 class="slide-title">AI Generated Visual Concepts</h2>
+        <span class="visuals-badge">Created in 10 Minutes</span>
+      </div>
+      <div class="visuals-grid">
+        <div class="visual-item">
+          <div class="visual-label-box">START<br><span>prompt + idea</span></div>
+          <img src="assets/images/slide7_img1.png" alt="AI Visual Concept 1" class="visual-img" loading="lazy">
+        </div>
+        <div class="visual-item">
+          <div class="visual-label-box">END<br><span>AI Generated Visuals</span></div>
+          <img src="assets/images/slide7_img2.png" alt="AI Visual Concept 2" class="visual-img" loading="lazy">
+        </div>
+      </div>
+      <p class="visual-quote">"These visuals were generated with AI in less than 10 minutes during the preparation of this presentation."</p>
+    </div>
+    <div class="slide-footer">
+      <span>Orik Drancolli | NLB Bank Prishtina</span>
+      <span class="slide-number-inline">7/12</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: Concept Project -->
+  <section class="slide" data-slide="8">
+    <div class="slide-bg"></div>
+    <div class="slide-content">
+      <div class="section-label">CONCEPT PROJECT</div>
+      <h2 class="slide-title">Daily Liquidity Project — Data Foundation</h2>
+      <p class="slide-intro">Concept project for improving liquidity reporting. AI helped design the analytical structure.</p>
+      <div class="pipeline-flow">
+        <div class="pipeline-step">
+          <div class="pipe-num">01</div>
+          <div class="pipe-title">SQL Queries</div>
+          <div class="pipe-desc">Liquidity data extraction</div>
+        </div>
+        <div class="pipe-arrow">&#10140;</div>
+        <div class="pipeline-step">
+          <div class="pipe-num">02</div>
+          <div class="pipe-title">Table Structure</div>
+          <div class="pipe-desc">Tables structured for analysis</div>
+        </div>
+        <div class="pipe-arrow">&#10140;</div>
+        <div class="pipeline-step">
+          <div class="pipe-num">03</div>
+          <div class="pipe-title">Power BI Model</div>
+          <div class="pipe-desc">Data model architecture</div>
+        </div>
+        <div class="pipe-arrow">&#10140;</div>
+        <div class="pipeline-step">
+          <div class="pipe-num">04</div>
+          <div class="pipe-title">KPIs &amp; DAX</div>
+          <div class="pipe-desc">Liquidity KPIs and formulas</div>
+        </div>
+      </div>
+      <div class="key-insight">
+        <span class="insight-label">KEY IDEA</span>
+        <span class="insight-text">Create a structured liquidity intelligence system</span>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>Orik Drancolli | NLB Bank Prishtina</span>
+      <span class="slide-number-inline">8/12</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 9: Automated Intelligence -->
+  <section class="slide" data-slide="9">
+    <div class="slide-bg"></div>
+    <div class="slide-content">
+      <div class="section-label">AUTOMATED INTELLIGENCE</div>
+      <h2 class="slide-title">Daily Liquidity — Automated Insights</h2>
+      <div class="auto-layout">
+        <div class="auto-flow">
+          <div class="auto-step">
+            <div class="auto-step-title">Power BI Dashboard</div>
+            <div class="auto-step-desc">Live liquidity data</div>
+          </div>
+          <div class="auto-arrow">&#9660;</div>
+          <div class="auto-step">
+            <div class="auto-step-title">AI Analysis</div>
+            <div class="auto-step-desc">Pattern detection &amp; interpretation</div>
+          </div>
+          <div class="auto-arrow">&#9660;</div>
+          <div class="auto-step">
+            <div class="auto-step-title">Liquidity Insight Summary</div>
+            <div class="auto-step-desc">Structured executive output</div>
+          </div>
+        </div>
+        <div class="auto-insights">
+          <h3 class="insights-heading">GENERATED INSIGHTS</h3>
+          <ul class="insights-list">
+            <li>Key liquidity movements</li>
+            <li>Changes versus previous day</li>
+            <li>Estimated loan disbursement capacity</li>
+            <li>Recommended management focus points</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>Orik Drancolli | NLB Bank Prishtina</span>
+      <span class="slide-number-inline">9/12</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 10: Automation Concept -->
+  <section class="slide" data-slide="10">
+    <div class="slide-bg"></div>
+    <div class="slide-content">
+      <div class="section-label">AUTOMATION CONCEPT</div>
+      <h2 class="slide-title">From Dashboard to Executive Email<br><span class="title-sub">with Power Automate and AI</span></h2>
+      <div class="pipeline-flow">
+        <div class="pipeline-step">
+          <div class="pipe-num">01</div>
+          <div class="pipe-title">Power BI Dashboard</div>
+          <div class="pipe-desc">Live data visualization</div>
+        </div>
+        <div class="pipe-arrow">&#10140;</div>
+        <div class="pipeline-step">
+          <div class="pipe-num">02</div>
+          <div class="pipe-title">AI Insight Generation</div>
+          <div class="pipe-desc">Automated analysis using prompts</div>
+        </div>
+        <div class="pipe-arrow">&#10140;</div>
+        <div class="pipeline-step">
+          <div class="pipe-num">03</div>
+          <div class="pipe-title">Executive Summary</div>
+          <div class="pipe-desc">Structured reporting</div>
+        </div>
+        <div class="pipe-arrow">&#10140;</div>
+        <div class="pipeline-step">
+          <div class="pipe-num">04</div>
+          <div class="pipe-title">Automated Email</div>
+          <div class="pipe-desc">Timely delivery to management</div>
+        </div>
+      </div>
+      <div class="collab-result">
+        Every report could automatically generate executive insights with <strong>AI prompt</strong>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>Orik Drancolli | NLB Bank Prishtina</span>
+      <span class="slide-number-inline">10/12</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 11: Governance -->
+  <section class="slide" data-slide="11">
+    <div class="slide-bg"></div>
+    <div class="slide-content">
+      <div class="section-label">GOVERNANCE</div>
+      <h2 class="slide-title">Risk &amp; Governance Awareness</h2>
+      <p class="slide-intro">Responsible AI use requires governance.</p>
+      <div class="workflow-grid">
+        <div class="step-card">
+          <div class="step-number">01</div>
+          <div class="step-title">Data Privacy</div>
+          <div class="step-desc">No confidential data uploaded to AI tools</div>
+        </div>
+        <div class="step-card">
+          <div class="step-number">02</div>
+          <div class="step-title">Structured Prompts</div>
+          <div class="step-desc">Consistent prompt architecture used</div>
+        </div>
+        <div class="step-card">
+          <div class="step-number">03</div>
+          <div class="step-title">Human Review</div>
+          <div class="step-desc">Human review before delivery of any output</div>
+        </div>
+        <div class="step-card">
+          <div class="step-number">04</div>
+          <div class="step-title">AI Role Clarity</div>
+          <div class="step-desc">AI supports analysis, not decisions</div>
+        </div>
+      </div>
+      <div class="key-insight">
+        <span class="insight-text">Human accountability remains at every step.</span>
+      </div>
+    </div>
+    <div class="slide-footer">
+      <span>Orik Drancolli | NLB Bank Prishtina</span>
+      <span class="slide-number-inline">11/12</span>
+    </div>
+  </section>
+
+  <!-- SLIDE 12: Final Thought -->
+  <section class="slide slide-final" data-slide="12">
+    <div class="slide-bg"></div>
+    <div class="final-content">
+      <h2 class="final-label">Final Thought</h2>
+      <p class="final-statement">AI will not replace banking professionals.</p>
+      <p class="final-emphasis">But professionals who integrate AI<br>into their workflow will transform<br>how decisions are made.</p>
+      <p class="final-quote">"This presentation was structured with ChatGPT and generated using Claude."</p>
+      <div class="final-author">
+        <div class="author-name">Orik Drancolli</div>
+        <div class="author-role">Reporting Coordinator | NLB Bank Prishtina</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- Navigation -->
+<div class="nav-controls">
+  <button class="nav-btn" id="prevBtn" aria-label="Previous slide">&#8249;</button>
+  <button class="nav-btn" id="nextBtn" aria-label="Next slide">&#8250;</button>
+</div>
+
+<!-- Progress bar -->
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+<script>
+(function() {
+  'use strict';
+
+  var slides = document.querySelectorAll('.slide');
+  var total = slides.length;
+  var prevBtn = document.getElementById('prevBtn');
+  var nextBtn = document.getElementById('nextBtn');
+  var progressFill = document.getElementById('progressFill');
+  var counter = document.getElementById('slideCounter');
+  var current = 0;
+  var animating = false;
+
+  function updateUI() {
+    var pct = ((current + 1) / total) * 100;
+    progressFill.style.width = pct + '%';
+    prevBtn.disabled = current === 0;
+    nextBtn.disabled = current === total - 1;
+    counter.textContent = (current + 1) + ' / ' + total;
+  }
+
+  function animateElements(slide) {
+    var targets = slide.querySelectorAll(
+      '.section-label, .slide-title, .slide-intro, .cover-title, .cover-subtitle, ' +
+      '.cover-tagline, .accent-line, .cover-card, .workflow-card, .step-card, ' +
+      '.collab-box, .collab-plus, .collab-result, .impact-card, .result-item, ' +
+      '.pipeline-step, .pipe-arrow, .auto-step, .auto-insights, .key-insight, ' +
+      '.visual-item, .visual-quote, .visuals-badge, .final-label, .final-statement, ' +
+      '.final-emphasis, .final-quote, .final-author, .cover-author'
+    );
+    targets.forEach(function(el) {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(18px)';
+      el.style.transition = 'none';
+    });
+    var delay = 60;
+    targets.forEach(function(el, i) {
+      setTimeout(function() {
+        el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+        el.style.opacity = '1';
+        el.style.transform = 'translateY(0)';
+      }, delay + i * 50);
+    });
+  }
+
+  function goTo(index) {
+    if (animating || index < 0 || index >= total || index === current) return;
+    animating = true;
+
+    var oldSlide = slides[current];
+    var newSlide = slides[index];
+
+    oldSlide.style.transition = 'opacity 0.35s ease';
+    oldSlide.style.opacity = '0';
+
+    setTimeout(function() {
+      oldSlide.classList.remove('active');
+      oldSlide.style.transition = '';
+      oldSlide.style.opacity = '';
+      oldSlide.scrollTop = 0;
+
+      newSlide.style.opacity = '0';
+      newSlide.classList.add('active');
+      newSlide.scrollTop = 0;
+      void newSlide.offsetWidth;
+
+      newSlide.style.transition = 'opacity 0.4s ease';
+      newSlide.style.opacity = '1';
+      animateElements(newSlide);
+
+      setTimeout(function() {
+        newSlide.style.transition = '';
+        animating = false;
+      }, 450);
+    }, 300);
+
+    current = index;
+    updateUI();
+    history.replaceState(null, '', '#slide-' + (current + 1));
+  }
+
+  // Buttons
+  prevBtn.addEventListener('click', function() { goTo(current - 1); });
+  nextBtn.addEventListener('click', function() { goTo(current + 1); });
+
+  // Keyboard
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ' || e.key === 'PageDown') {
+      e.preventDefault(); goTo(current + 1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp') {
+      e.preventDefault(); goTo(current - 1);
+    } else if (e.key === 'Home') {
+      e.preventDefault(); goTo(0);
+    } else if (e.key === 'End') {
+      e.preventDefault(); goTo(total - 1);
+    }
+  });
+
+  // Touch swipe
+  var startX = 0, startY = 0, distX = 0, distY = 0;
+  document.addEventListener('touchstart', function(e) {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    distX = 0; distY = 0;
+  }, { passive: true });
+  document.addEventListener('touchmove', function(e) {
+    distX = e.touches[0].clientX - startX;
+    distY = e.touches[0].clientY - startY;
+  }, { passive: true });
+  document.addEventListener('touchend', function() {
+    if (Math.abs(distX) > Math.abs(distY) && Math.abs(distX) > 50) {
+      if (distX < 0) goTo(current + 1);
+      else goTo(current - 1);
+    }
+  }, { passive: true });
+
+  // Hash navigation
+  var hash = window.location.hash;
+  if (hash) {
+    var m = hash.match(/slide-(\d+)/);
+    if (m) {
+      var idx = parseInt(m[1], 10) - 1;
+      if (idx >= 0 && idx < total) {
+        slides[0].classList.remove('active');
+        slides[idx].classList.add('active');
+        current = idx;
+      }
+    }
+  }
+
+  updateUI();
+  setTimeout(function() { animateElements(slides[current]); }, 100);
+})();
+</script>
+</body>
+</html>
